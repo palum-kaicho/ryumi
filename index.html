@@ -12,6 +12,7 @@ body{
     background:#111;
     color:white;
     font-family:sans-serif;
+    overflow-x:hidden;
 }
 
 .container{
@@ -29,6 +30,26 @@ body{
 
 h1{
     color:#ff9db6;
+}
+
+.wheel-wrap{
+    position:relative;
+    width:420px;
+    height:420px;
+}
+
+.pointer{
+    position:absolute;
+    top:-8px;
+    left:50%;
+    transform:translateX(-50%);
+    width:0;
+    height:0;
+    border-left:20px solid transparent;
+    border-right:20px solid transparent;
+    border-top:40px solid #ff4d6d;
+    z-index:10;
+    filter:drop-shadow(0 0 8px rgba(255,80,120,0.7));
 }
 
 canvas{
@@ -53,6 +74,28 @@ button{
     font-size:28px;
     color:#ffd6e0;
     font-weight:bold;
+    min-height:40px;
+}
+
+.result.win{
+    animation: pop 0.5s ease;
+}
+
+@keyframes pop{
+
+    0%{
+        transform:scale(0.8);
+        opacity:0;
+    }
+
+    50%{
+        transform:scale(1.2);
+    }
+
+    100%{
+        transform:scale(1);
+        opacity:1;
+    }
 }
 
 .right{
@@ -93,6 +136,132 @@ button{
     font-weight:bold;
 }
 
+.flash{
+    animation: flashBg 0.6s ease;
+}
+
+@keyframes flashBg{
+
+    0%{
+        background:#111;
+    }
+
+    50%{
+        background:#2a0010;
+    }
+
+    100%{
+        background:#111;
+    }
+}
+
+.shake{
+    animation: shake 0.4s;
+}
+
+@keyframes shake{
+
+    0%{ transform:translate(0px,0px); }
+    20%{ transform:translate(-5px,3px); }
+    40%{ transform:translate(5px,-3px); }
+    60%{ transform:translate(-4px,2px); }
+    80%{ transform:translate(4px,-2px); }
+    100%{ transform:translate(0px,0px); }
+
+}
+
+.particle{
+    position:fixed;
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    pointer-events:none;
+    animation: particle 1s linear forwards;
+    z-index:9999;
+}
+
+@keyframes particle{
+
+    0%{
+        transform:translate(0,0) scale(1);
+        opacity:1;
+    }
+
+    100%{
+        transform:translate(var(--x), var(--y)) scale(0);
+        opacity:0;
+    }
+
+}
+
+.jackpot{
+    animation: jackpotFlash 1s infinite;
+}
+
+@keyframes jackpotFlash{
+
+    0%{
+        background:#111;
+    }
+
+    25%{
+        background:#330000;
+    }
+
+    50%{
+        background:#111133;
+    }
+
+    75%{
+        background:#003300;
+    }
+
+    100%{
+        background:#111;
+    }
+
+}
+
+.big-result{
+
+    position:fixed;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    font-size:72px;
+    font-weight:bold;
+    color:#fff;
+    text-shadow:
+        0 0 10px #fff,
+        0 0 20px #ff00ff,
+        0 0 40px #00ffff;
+
+    z-index:99999;
+
+    animation: bigPop 1s ease;
+
+    pointer-events:none;
+}
+
+@keyframes bigPop{
+
+    0%{
+        transform:translate(-50%,-50%) scale(0.3);
+        opacity:0;
+    }
+
+    50%{
+        transform:translate(-50%,-50%) scale(1.3);
+        opacity:1;
+    }
+
+    100%{
+        transform:translate(-50%,-50%) scale(1);
+        opacity:1;
+    }
+
+}
+
 </style>
 </head>
 
@@ -104,9 +273,13 @@ button{
 
         <h1>罰ゲームルーレット</h1>
 
-        <canvas id="wheel" width="420" height="420"></canvas>
+        <div class="wheel-wrap">
 
-        <br>
+            <div class="pointer"></div>
+
+            <canvas id="wheel" width="420" height="420"></canvas>
+
+        </div>
 
         <button onclick="spin()">回す</button>
 
@@ -163,6 +336,22 @@ button{
 
 </div>
 
+<audio id="spinSound">
+    <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=roulette-1-26337.mp3">
+</audio>
+
+<audio id="winSound">
+    <source src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8631d8a9f.mp3?filename=success-fanfare-trumpets-6185.mp3">
+</audio>
+
+<audio id="tickSound">
+    <source src="https://cdn.pixabay.com/download/audio/2022/03/24/audio_5d0c12c6d1.mp3?filename=click-124467.mp3">
+</audio>
+
+<audio id="jackpotSound">
+    <source src="https://cdn.pixabay.com/download/audio/2022/11/17/audio_8828f20d31.mp3?filename=success-1-6297.mp3">
+</audio>
+
 <script>
 
 const items = [
@@ -180,9 +369,9 @@ const colors = [
     "#fbbf24",
     "#a78bfa",
     "#ef4444",
-    "#991b1b",
+    "rainbow",
     "#dc2626",
-    "#ffffff"
+    "rainbow"
 ];
 
 const canvas = document.getElementById("wheel");
@@ -194,6 +383,7 @@ const radius = 200;
 
 let rotation = 0;
 let spinning = false;
+let lastTick = 0;
 
 function drawWheel(angle){
 
@@ -211,7 +401,25 @@ function drawWheel(angle){
         ctx.arc(center, center, radius, start, end);
         ctx.closePath();
 
-        ctx.fillStyle = colors[i];
+        if(colors[i] === "rainbow"){
+
+            const gradient = ctx.createLinearGradient(0,0,400,400);
+
+            gradient.addColorStop(0,"#ff0000");
+            gradient.addColorStop(0.2,"#ffff00");
+            gradient.addColorStop(0.4,"#00ff00");
+            gradient.addColorStop(0.6,"#00ffff");
+            gradient.addColorStop(0.8,"#0000ff");
+            gradient.addColorStop(1,"#ff00ff");
+
+            ctx.fillStyle = gradient;
+
+        }else{
+
+            ctx.fillStyle = colors[i];
+
+        }
+
         ctx.fill();
 
         ctx.save();
@@ -227,9 +435,48 @@ function drawWheel(angle){
 
         ctx.restore();
     }
+
+    ctx.beginPath();
+    ctx.arc(center, center, 35, 0, Math.PI * 2);
+    ctx.fillStyle = "#111";
+    ctx.fill();
 }
 
 drawWheel(0);
+
+function createParticles(){
+
+    for(let i = 0; i < 40; i++){
+
+        const particle = document.createElement("div");
+
+        particle.className = "particle";
+
+        particle.style.left = (window.innerWidth / 2) + "px";
+        particle.style.top = (window.innerHeight / 2) + "px";
+
+        particle.style.background =
+            "hsl(" + Math.random() * 360 + "deg 100% 70%)";
+
+        particle.style.setProperty(
+            "--x",
+            (Math.random() * 600 - 300) + "px"
+        );
+
+        particle.style.setProperty(
+            "--y",
+            (Math.random() * 600 - 300) + "px"
+        );
+
+        document.body.appendChild(particle);
+
+        setTimeout(function(){
+
+            particle.remove();
+
+        },1000);
+    }
+}
 
 function spin(){
 
@@ -238,6 +485,8 @@ function spin(){
     }
 
     spinning = true;
+
+    document.getElementById("spinSound").play();
 
     const extra = 360 * 5;
     const random = Math.random() * 360;
@@ -261,6 +510,18 @@ function spin(){
 
         drawWheel(current * Math.PI / 180);
 
+        if(now - lastTick > 80){
+
+            const tick = document.getElementById("tickSound");
+
+            tick.currentTime = 0;
+
+            tick.play();
+
+            lastTick = now;
+
+        }
+
         if(progress < 1){
 
             requestAnimationFrame(animate);
@@ -275,8 +536,59 @@ function spin(){
 
             const index = Math.floor(adjusted / slice);
 
-            document.getElementById("result").innerText =
+            const resultText = document.getElementById("result");
+
+            resultText.innerText =
                 "結果：" + items[index];
+
+            resultText.classList.remove("win");
+
+            void resultText.offsetWidth;
+
+            resultText.classList.add("win");
+
+            document.body.classList.remove("flash");
+
+            void document.body.offsetWidth;
+
+            document.body.classList.add("flash");
+
+            document.body.classList.remove("shake");
+
+            void document.body.offsetWidth;
+
+            document.body.classList.add("shake");
+
+            document.getElementById("winSound").play();
+
+            createParticles();
+
+            if(
+                items[index] === "七味×10" ||
+                items[index] === "マヨネーズ"
+            ){
+
+                document.body.classList.add("jackpot");
+
+                document.getElementById("jackpotSound").play();
+
+                const big = document.createElement("div");
+
+                big.className = "big-result";
+
+                big.innerText = "🎉 大当たり 🎉";
+
+                document.body.appendChild(big);
+
+                setTimeout(function(){
+
+                    big.remove();
+
+                    document.body.classList.remove("jackpot");
+
+                },3000);
+
+            }
 
             spinning = false;
         }
