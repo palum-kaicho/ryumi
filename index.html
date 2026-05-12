@@ -142,17 +142,10 @@ button{
 
 @keyframes flashBg{
 
-    0%{
-        background:#111;
-    }
+    0%{ background:#111; }
+    50%{ background:#2a0010; }
+    100%{ background:#111; }
 
-    50%{
-        background:#2a0010;
-    }
-
-    100%{
-        background:#111;
-    }
 }
 
 .shake{
@@ -323,22 +316,6 @@ button{
 
 </div>
 
-<audio id="spinSound" preload="auto">
-    <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=roulette-1-26337.mp3">
-</audio>
-
-<audio id="winSound" preload="auto">
-    <source src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8631d8a9f.mp3?filename=success-fanfare-trumpets-6185.mp3">
-</audio>
-
-<audio id="tickSound" preload="auto">
-    <source src="https://cdn.pixabay.com/download/audio/2022/03/24/audio_5d0c12c6d1.mp3?filename=click-124467.mp3">
-</audio>
-
-<audio id="jackpotSound" preload="auto">
-    <source src="https://cdn.pixabay.com/download/audio/2022/11/17/audio_8828f20d31.mp3?filename=success-1-6297.mp3">
-</audio>
-
 <script>
 
 const items = [
@@ -360,6 +337,31 @@ const colors = [
     "#dc2626",
     "rainbow"
 ];
+
+const tickPool = [];
+
+for(let i = 0; i < 10; i++){
+
+    const a = new Audio(
+        "https://cdn.pixabay.com/download/audio/2022/03/24/audio_5d0c12c6d1.mp3?filename=click-124467.mp3"
+    );
+
+    a.volume = 0.3;
+
+    tickPool.push(a);
+}
+
+const spinSound = new Audio(
+    "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=roulette-1-26337.mp3"
+);
+
+const winSound = new Audio(
+    "https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8631d8a9f.mp3?filename=success-fanfare-trumpets-6185.mp3"
+);
+
+const jackpotSound = new Audio(
+    "https://cdn.pixabay.com/download/audio/2022/11/17/audio_8828f20d31.mp3?filename=success-1-6297.mp3"
+);
 
 const canvas = document.getElementById("wheel");
 const ctx = canvas.getContext("2d");
@@ -412,10 +414,13 @@ function drawWheel(angle){
         ctx.save();
 
         ctx.translate(center, center);
+
         ctx.rotate(start + arc / 2);
 
         ctx.fillStyle = i === 6 ? "#111" : "#fff";
+
         ctx.font = "bold 20px sans-serif";
+
         ctx.textAlign = "right";
 
         ctx.fillText(items[i], radius - 20, 10);
@@ -424,8 +429,11 @@ function drawWheel(angle){
     }
 
     ctx.beginPath();
+
     ctx.arc(center, center, 35, 0, Math.PI * 2);
+
     ctx.fillStyle = "#111";
+
     ctx.fill();
 }
 
@@ -440,6 +448,7 @@ function createParticles(){
         particle.className = "particle";
 
         particle.style.left = (window.innerWidth / 2) + "px";
+
         particle.style.top = (window.innerHeight / 2) + "px";
 
         particle.style.background =
@@ -473,9 +482,12 @@ function spin(){
 
     spinning = true;
 
-    document.getElementById("spinSound").play();
+    spinSound.currentTime = 0;
+
+    spinSound.play().catch(()=>{});
 
     const extra = 360 * 5;
+
     const random = Math.random() * 360;
 
     const target = rotation + extra + random;
@@ -483,6 +495,7 @@ function spin(){
     const start = rotation;
 
     const duration = 5000;
+
     const startTime = performance.now();
 
     function animate(now){
@@ -499,9 +512,14 @@ function spin(){
 
         if(now - lastTick > 80){
 
-            document.getElementById("tickSound")
-                .cloneNode()
-                .play();
+            const tick =
+                tickPool[
+                    Math.floor(Math.random() * tickPool.length)
+                ];
+
+            tick.currentTime = 0;
+
+            tick.play().catch(()=>{});
 
             lastTick = now;
         }
@@ -517,10 +535,13 @@ function spin(){
             const slice = 360 / items.length;
 
             const adjusted =
-                (270 - rotation + slice / 2) % 360;
+                (270 - rotation) % 360;
+
+            const normalized =
+                (adjusted + 360) % 360;
 
             const index =
-                Math.floor(adjusted / slice);
+                Math.floor(normalized / slice);
 
             const resultText =
                 document.getElementById("result");
@@ -529,18 +550,26 @@ function spin(){
                 "結果：" + items[index];
 
             resultText.classList.remove("win");
+
             void resultText.offsetWidth;
+
             resultText.classList.add("win");
 
             document.body.classList.remove("flash");
+
             void document.body.offsetWidth;
+
             document.body.classList.add("flash");
 
             document.body.classList.remove("shake");
+
             void document.body.offsetWidth;
+
             document.body.classList.add("shake");
 
-            document.getElementById("winSound").play();
+            winSound.currentTime = 0;
+
+            winSound.play().catch(()=>{});
 
             createParticles();
 
@@ -551,9 +580,9 @@ function spin(){
 
                 document.body.classList.add("jackpot");
 
-                document
-                    .getElementById("jackpotSound")
-                    .play();
+                jackpotSound.currentTime = 0;
+
+                jackpotSound.play().catch(()=>{});
 
                 const big =
                     document.createElement("div");
