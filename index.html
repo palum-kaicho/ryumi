@@ -2,14 +2,290 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>test</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>罰ゲームルーレット</title>
+
+<style>
+
+body{
+    margin:0;
+    background:#111;
+    color:white;
+    font-family:sans-serif;
+}
+
+.container{
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    gap:40px;
+    padding:30px;
+    flex-wrap:wrap;
+}
+
+.left{
+    text-align:center;
+}
+
+h1{
+    color:#ff9db6;
+}
+
+canvas{
+    background:#222;
+    border-radius:50%;
+    box-shadow:0 0 20px rgba(255,255,255,0.2);
+}
+
+button{
+    margin-top:20px;
+    padding:15px 40px;
+    border:none;
+    border-radius:999px;
+    background:#ff4d6d;
+    color:white;
+    font-size:20px;
+    cursor:pointer;
+}
+
+.result{
+    margin-top:20px;
+    font-size:28px;
+    color:#ffd6e0;
+    font-weight:bold;
+}
+
+.right{
+    width:320px;
+}
+
+.character{
+    width:100%;
+    border-radius:20px;
+    margin-bottom:20px;
+}
+
+.reward-box{
+    background:#1d1d1d;
+    padding:20px;
+    border-radius:20px;
+}
+
+.reward-box h2{
+    margin-top:0;
+    text-align:center;
+    color:#ffb6c9;
+}
+
+.reward{
+    display:flex;
+    justify-content:space-between;
+    padding:10px 0;
+    border-bottom:1px solid rgba(255,255,255,0.1);
+}
+
+.reward:last-child{
+    border-bottom:none;
+}
+
+.coin{
+    color:#ffd54f;
+    font-weight:bold;
+}
+
+</style>
 </head>
 
-<body style="background:black;color:white;">
+<body>
 
-<h1>テスト成功</h1>
+<div class="container">
 
-<img src="./ryumi.PNG" width="300">
+    <div class="left">
+
+        <h1>罰ゲームルーレット</h1>
+
+        <canvas id="wheel" width="420" height="420"></canvas>
+
+        <br>
+
+        <button onclick="spin()">回す</button>
+
+        <div class="result" id="result"></div>
+
+    </div>
+
+    <div class="right">
+
+        <img src="./ryumi.PNG" class="character">
+
+        <div class="reward-box">
+
+            <h2>コイン一覧</h2>
+
+            <div class="reward">
+                <span>水</span>
+                <span class="coin">10</span>
+            </div>
+
+            <div class="reward">
+                <span>はちみつ</span>
+                <span class="coin">20</span>
+            </div>
+
+            <div class="reward">
+                <span>アイス</span>
+                <span class="coin">30</span>
+            </div>
+
+            <div class="reward">
+                <span>七味（1振り）</span>
+                <span class="coin">100</span>
+            </div>
+
+            <div class="reward">
+                <span>七味（10振り）</span>
+                <span class="coin">500</span>
+            </div>
+
+            <div class="reward">
+                <span>コチュジャン</span>
+                <span class="coin">300</span>
+            </div>
+
+            <div class="reward">
+                <span>マヨネーズ</span>
+                <span class="coin">800</span>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+const items = [
+    "水",
+    "はちみつ",
+    "アイス",
+    "七味×1",
+    "七味×10",
+    "コチュジャン",
+    "マヨネーズ"
+];
+
+const colors = [
+    "#60a5fa",
+    "#fbbf24",
+    "#a78bfa",
+    "#ef4444",
+    "#991b1b",
+    "#dc2626",
+    "#ffffff"
+];
+
+const canvas = document.getElementById("wheel");
+const ctx = canvas.getContext("2d");
+
+const size = 420;
+const center = size / 2;
+const radius = 200;
+
+let rotation = 0;
+let spinning = false;
+
+function drawWheel(angle){
+
+    const arc = Math.PI * 2 / items.length;
+
+    ctx.clearRect(0,0,size,size);
+
+    for(let i=0;i<items.length;i++){
+
+        const start = i * arc + angle;
+        const end = start + arc;
+
+        ctx.beginPath();
+        ctx.moveTo(center, center);
+        ctx.arc(center, center, radius, start, end);
+        ctx.closePath();
+
+        ctx.fillStyle = colors[i];
+        ctx.fill();
+
+        ctx.save();
+
+        ctx.translate(center, center);
+        ctx.rotate(start + arc / 2);
+
+        ctx.fillStyle = i === 6 ? "#111" : "#fff";
+        ctx.font = "bold 20px sans-serif";
+        ctx.textAlign = "right";
+
+        ctx.fillText(items[i], radius - 20, 10);
+
+        ctx.restore();
+    }
+}
+
+drawWheel(0);
+
+function spin(){
+
+    if(spinning){
+        return;
+    }
+
+    spinning = true;
+
+    const extra = 360 * 5;
+    const random = Math.random() * 360;
+
+    const target = rotation + extra + random;
+
+    const start = rotation;
+
+    const duration = 5000;
+    const startTime = performance.now();
+
+    function animate(now){
+
+        const elapsed = now - startTime;
+
+        const progress = Math.min(elapsed / duration, 1);
+
+        const eased = 1 - Math.pow(1 - progress, 3);
+
+        const current = start + (target - start) * eased;
+
+        drawWheel(current * Math.PI / 180);
+
+        if(progress < 1){
+
+            requestAnimationFrame(animate);
+
+        }else{
+
+            rotation = target % 360;
+
+            const slice = 360 / items.length;
+
+            const adjusted = (360 - rotation + slice / 2) % 360;
+
+            const index = Math.floor(adjusted / slice);
+
+            document.getElementById("result").innerText =
+                "結果：" + items[index];
+
+            spinning = false;
+        }
+    }
+
+    requestAnimationFrame(animate);
+}
+
+</script>
 
 </body>
 </html>
