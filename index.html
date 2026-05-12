@@ -200,25 +200,11 @@ button{
 
 @keyframes jackpotFlash{
 
-    0%{
-        background:#111;
-    }
-
-    25%{
-        background:#330000;
-    }
-
-    50%{
-        background:#111133;
-    }
-
-    75%{
-        background:#003300;
-    }
-
-    100%{
-        background:#111;
-    }
+    0%{ background:#111; }
+    25%{ background:#330000; }
+    50%{ background:#111133; }
+    75%{ background:#003300; }
+    100%{ background:#111; }
 
 }
 
@@ -231,6 +217,7 @@ button{
     font-size:72px;
     font-weight:bold;
     color:#fff;
+
     text-shadow:
         0 0 10px #fff,
         0 0 20px #ff00ff,
@@ -336,19 +323,19 @@ button{
 
 </div>
 
-<audio id="spinSound">
+<audio id="spinSound" preload="auto">
     <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=roulette-1-26337.mp3">
 </audio>
 
-<audio id="winSound">
+<audio id="winSound" preload="auto">
     <source src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8631d8a9f.mp3?filename=success-fanfare-trumpets-6185.mp3">
 </audio>
 
-<audio id="tickSound">
+<audio id="tickSound" preload="auto">
     <source src="https://cdn.pixabay.com/download/audio/2022/03/24/audio_5d0c12c6d1.mp3?filename=click-124467.mp3">
 </audio>
 
-<audio id="jackpotSound">
+<audio id="jackpotSound" preload="auto">
     <source src="https://cdn.pixabay.com/download/audio/2022/11/17/audio_8828f20d31.mp3?filename=success-1-6297.mp3">
 </audio>
 
@@ -512,14 +499,11 @@ function spin(){
 
         if(now - lastTick > 80){
 
-            const tick = document.getElementById("tickSound");
-
-            tick.currentTime = 0;
-
-            tick.play();
+            document.getElementById("tickSound")
+                .cloneNode()
+                .play();
 
             lastTick = now;
-
         }
 
         if(progress < 1){
@@ -532,31 +516,28 @@ function spin(){
 
             const slice = 360 / items.length;
 
-            const adjusted = (360 - rotation + slice / 2) % 360;
+            const adjusted =
+                (270 - rotation + slice / 2) % 360;
 
-            const index = Math.floor(adjusted / slice);
+            const index =
+                Math.floor(adjusted / slice);
 
-            const resultText = document.getElementById("result");
+            const resultText =
+                document.getElementById("result");
 
             resultText.innerText =
                 "結果：" + items[index];
 
             resultText.classList.remove("win");
-
             void resultText.offsetWidth;
-
             resultText.classList.add("win");
 
             document.body.classList.remove("flash");
-
             void document.body.offsetWidth;
-
             document.body.classList.add("flash");
 
             document.body.classList.remove("shake");
-
             void document.body.offsetWidth;
-
             document.body.classList.add("shake");
 
             document.getElementById("winSound").play();
@@ -570,9 +551,12 @@ function spin(){
 
                 document.body.classList.add("jackpot");
 
-                document.getElementById("jackpotSound").play();
+                document
+                    .getElementById("jackpotSound")
+                    .play();
 
-                const big = document.createElement("div");
+                const big =
+                    document.createElement("div");
 
                 big.className = "big-result";
 
@@ -584,10 +568,11 @@ function spin(){
 
                     big.remove();
 
-                    document.body.classList.remove("jackpot");
+                    document.body
+                        .classList
+                        .remove("jackpot");
 
                 },3000);
-
             }
 
             spinning = false;
