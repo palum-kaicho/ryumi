@@ -318,7 +318,7 @@ function resetCounters(){
     counters["水"]=0;
     counters["はちみつ"]=0;
     counters["アイス"]=0;
-    counters["七味（1振り）"]=0;
+    counters["七味"]=0;
     counters["七味（10振り）"]=0;
     counters["コチュジャン"]=0;
     counters["マヨネーズ"]=0;
@@ -363,8 +363,8 @@ function updateStats(){
         </div>
 
         <div class="row">
-            <span>七味（1振り）</span>
-            <span>${counters["七味（1振り）"]}</span>
+            <span>七味</span>
+            <span>${counters["七味"]}</span>
         </div>
 
         <div class="row">
@@ -547,7 +547,7 @@ if(
     data[i].label === "ワサビ"
     ||
     data[i].label === "Joker"
-)        ){
+){
 
             const gradient =
                 ctx.createLinearGradient(
