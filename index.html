@@ -219,17 +219,21 @@ const specialData = [
     {label:"水", chance:10},
     {label:"アイス", chance:10},
     {label:"はちみつ", chance:10},
-    {label:"七味（1振り）", chance:10},
+    {label:"七味", chance:10},
     {label:"マヨネーズ", chance:10},
     {label:"コチュジャン", chance:10},
-    {label:"七味（10振り）", chance:17.5},
-    {label:"全部乗せ", chance:17.5}
+    {label:"七味（10振り）", chance:8.75},
+    {label:"ワサビ", chance:8.75},
+    {label:"全部乗せ", chance:8.75},
+    {label:"Joker", chance:8.75}
 ];
 
 const vipData = [
     {label:"水", chance:10},
-    {label:"七味（10振り）", chance:40},
-    {label:"全部乗せ", chance:50}
+    {label:"七味（10振り）", chance:20},
+    {label:"ワサビ", chance:20},
+    {label:"全部乗せ", chance:20},
+    {label:"Joker", chance:30}
 ];
 
 const counters =
@@ -242,11 +246,14 @@ const counters =
         "水":0,
         "はちみつ":0,
         "アイス":0,
+        "七味":0,
         "七味（1振り）":0,
         "七味（10振り）":0,
         "コチュジャン":0,
         "マヨネーズ":0,
-        "全部乗せ":0
+        "ワサビ":0,
+        "全部乗せ":0,
+        "Joker":0
     };
 
 let totalSpins =
@@ -316,6 +323,8 @@ function resetCounters(){
     counters["コチュジャン"]=0;
     counters["マヨネーズ"]=0;
     counters["全部乗せ"]=0;
+    counters["ワサビ"]=0;
+    counters["Joker"]=0;
 
     totalSpins=0;
 
@@ -377,6 +386,15 @@ function updateStats(){
             <span>全部乗せ</span>
             <span>${counters["全部乗せ"]}</span>
         </div>
+        <div class="row">
+    <span>ワサビ</span>
+    <span>${counters["ワサビ"]}</span>
+</div>
+
+<div class="row rainbow">
+    <span>Joker</span>
+    <span>${counters["Joker"]}</span>
+</div>
     `;
 }
 
@@ -521,11 +539,15 @@ function drawWheel(angle){
 
         ctx.closePath();
 
-        if(
-            data[i].label === "全部乗せ"
-            ||
-            data[i].label === "七味（10振り）"
-        ){
+if(
+    data[i].label === "全部乗せ"
+    ||
+    data[i].label === "七味（10振り）"
+    ||
+    data[i].label === "ワサビ"
+    ||
+    data[i].label === "Joker"
+)        ){
 
             const gradient =
                 ctx.createLinearGradient(
@@ -686,9 +708,13 @@ if(mode === "normal"){
         );
 
     const isJackpot =
-        result === "七味（10振り）"
-        ||
-        result === "全部乗せ";
+    result === "七味（10振り）"
+    ||
+    result === "全部乗せ"
+    ||
+    result === "ワサビ"
+    ||
+    result === "Joker";
 
     const willCutin =
         isJackpot;
